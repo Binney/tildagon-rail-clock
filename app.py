@@ -71,7 +71,7 @@ class RailClockApp(app.App):
     def draw(self, ctx):
         ctx.save()
         ctx.rgb(0, 0, 0).rectangle(-120, -120, 240, 240).fill()
-        ctx.line_width = 5.0
+        ctx.line_width = 6.0
         ctx.rgb(*nr_red).arc(0, 0, r1, 0, 2 * pi, True).stroke()
         ctx.rgb(*nr_red).arc(0, 0, r2, 0, 2 * pi, True).stroke()
         seconds = self.seconds
@@ -84,7 +84,7 @@ class RailClockApp(app.App):
         ctx.text_align = ctx.CENTER
         ctx.text_baseline = 'middle'
         ctx.font_size = 60
-        ctx.rgb(1, 1, 1).move_to(0, 0).text(f"{self.hours}:{self.minutes:02d}")
+        ctx.rgb(1, 1, 1).move_to(0, 0).text(f"{self.hours:02d}:{self.minutes:02d}")
         ctx.restore()
 
 
