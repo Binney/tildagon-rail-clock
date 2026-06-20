@@ -37,4 +37,4 @@ description = "The National Rail clock for Tildagon"
 # increased, we interpret this as a new version being released.
 #
 # Version number must be an string!
-version = "0.0.1"
+version = "0.0.2"
