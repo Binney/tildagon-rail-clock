@@ -44,10 +44,11 @@ class RailClockApp(app.App):
         self.minutes += minutes
         self.seconds += seconds
         if self.seconds >= 60 or self.seconds < 0:
-            self.minutes += self.seconds // 60
+            print(self.minutes, self.seconds)
+            self.minutes += int(self.seconds // 60)
             self.seconds = self.seconds % 60
         if self.minutes >= 60 or self.minutes < 0:
-            self.hours += self.minutes // 60
+            self.hours += int(self.minutes // 60)
             self.minutes = self.minutes % 60
         self.hours = self.hours % 24
 
@@ -88,12 +89,11 @@ class RailClockApp(app.App):
         else:
             self.ff_rate = 1
 
-        # Update every frame so it's smooth:
-        self.seconds += delta / 1000
-
         try:
             now = time.localtime()
             self.update_time(now)
+            # Update every frame so it's smooth:
+            self.seconds += delta / 1000
             # Plus sync every minute to avoid drift:
             # (but do it at the 45 second mark, so the magic moment the arrows meet is smooth!)
             if now.tm_sec == 45:
@@ -104,7 +104,7 @@ class RailClockApp(app.App):
                 self.updated_seconds = False
         except:
             # no clock, just count monotonically upwards instead
-            self.bump_time(0, 0, 0)
+            self.bump_time(0, 0, delta / 1000)
 
     def draw(self, ctx):
         ctx.save()
