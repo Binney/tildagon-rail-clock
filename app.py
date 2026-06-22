@@ -41,9 +41,15 @@ class RailClockApp(app.App):
 
     def __init__(self):
         self.button_states = Buttons(self)
-        now = time.localtime()
-        self.update_time(now)
-        self.seconds = now.tm_sec
+        try:
+            now = time.localtime()
+            self.update_time(now)
+            self.seconds = now.tm_sec
+        except:
+            print("Couldn't get starting time. Starting at midnight")
+            self.hours = 0
+            self.minutes = 0
+            self.seconds = 0
 
         self.updated_seconds = False
 
@@ -54,19 +60,31 @@ class RailClockApp(app.App):
             # open. Without it the app would close again immediately.
             self.button_states.clear()
             self.minimise()
-        now = time.localtime()
-        self.update_time(now)
 
         # Update every frame so it's smooth:
         self.seconds += delta / 1000
-        # Plus sync every minute to avoid drift:
-        # (but do it at the 45 second mark, so the magic moment the arrows meet is smooth!)
-        if now.tm_sec == 45:
-            if not self.updated_seconds:
-                self.seconds = 45
-            self.updated_seconds = True
-        else:
-            self.updated_seconds = False
+
+        try:
+            now = time.localtime()
+            self.update_time(now)
+            # Plus sync every minute to avoid drift:
+            # (but do it at the 45 second mark, so the magic moment the arrows meet is smooth!)
+            if now.tm_sec == 45:
+                if not self.updated_seconds:
+                    self.seconds = 45
+                self.updated_seconds = True
+            else:
+                self.updated_seconds = False
+        except:
+            # no clock, just count monotonically upwards instead
+            if self.seconds > 60:
+                self.minutes += self.seconds // 60
+                self.seconds = self.seconds % 60
+            if self.minutes > 60:
+                self.hours = self.minutes // 60
+                self.minutes = self.minutes % 60
+            self.hours = self.hours % 24
+
 
     def draw(self, ctx):
         ctx.save()
@@ -81,10 +99,11 @@ class RailClockApp(app.App):
         draw_polygon(ctx, arr1, nr_red)
         draw_polygon(ctx, arr2, nr_red)
         ctx.font = 'Arimo Bold'
-        ctx.text_align = ctx.CENTER
-        ctx.text_baseline = 'middle'
         ctx.font_size = 60
-        ctx.rgb(1, 1, 1).move_to(0, 0).text(f"{self.hours:02d}:{self.minutes:02d}")
+        ctx.text_align = ctx.CENTER
+        # for some reason my 2024 badge crashes here, so let's bodge the y coord instead
+        # ctx.text_baseline = 'center'
+        ctx.rgb(1, 1, 1).move_to(0, 16).text(f"{self.hours:02d}:{self.minutes:02d}")
         ctx.restore()
 
 
