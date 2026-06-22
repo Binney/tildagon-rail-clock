@@ -39,8 +39,22 @@ class RailClockApp(app.App):
         self.hours = localtime.tm_hour
         self.minutes = localtime.tm_min
 
+    def bump_time(self, hours, minutes, seconds):
+        self.hours += hours
+        self.minutes += minutes
+        self.seconds += seconds
+        if self.seconds >= 60 or self.seconds < 0:
+            self.minutes += self.seconds // 60
+            self.seconds = self.seconds % 60
+        if self.minutes >= 60 or self.minutes < 0:
+            self.hours += self.minutes // 60
+            self.minutes = self.minutes % 60
+        self.hours = self.hours % 24
+
+
     def __init__(self):
         self.button_states = Buttons(self)
+        self.ff_rate = 1
         try:
             now = time.localtime()
             self.update_time(now)
@@ -60,6 +74,19 @@ class RailClockApp(app.App):
             # open. Without it the app would close again immediately.
             self.button_states.clear()
             self.minimise()
+        if self.button_states.get(BUTTON_TYPES["DOWN"]):
+            self.ff_rate += 1
+            if self.ff_rate > 60:
+                self.ff_rate = 60
+            self.bump_time(0, self.ff_rate, 0)
+        elif self.button_states.get(BUTTON_TYPES["UP"]):
+            self.ff_rate += 1
+            if self.ff_rate > 60:
+                self.ff_rate = 60
+            self.bump_time(0, -self.ff_rate, 0)
+
+        else:
+            self.ff_rate = 1
 
         # Update every frame so it's smooth:
         self.seconds += delta / 1000
@@ -77,14 +104,7 @@ class RailClockApp(app.App):
                 self.updated_seconds = False
         except:
             # no clock, just count monotonically upwards instead
-            if self.seconds > 60:
-                self.minutes += self.seconds // 60
-                self.seconds = self.seconds % 60
-            if self.minutes > 60:
-                self.hours = self.minutes // 60
-                self.minutes = self.minutes % 60
-            self.hours = self.hours % 24
-
+            self.bump_time(0, 0, 0)
 
     def draw(self, ctx):
         ctx.save()
