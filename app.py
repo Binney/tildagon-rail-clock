@@ -36,15 +36,16 @@ nr_red = hex_to_tuple("#db010e")
 
 class RailClockApp(app.App):
     def update_time(self, localtime):
-        self.hours = localtime.tm_hour
-        self.minutes = localtime.tm_min
+        (_, _, _, hrs, mins, _, _, _) = localtime
+        # horrid hack: emf is in British Summer Time deal with it
+        self.hours = (hrs + 1) % 24
+        self.minutes = mins
 
     def bump_time(self, hours, minutes, seconds):
         self.hours += hours
         self.minutes += minutes
         self.seconds += seconds
         if self.seconds >= 60 or self.seconds < 0:
-            print(self.minutes, self.seconds)
             self.minutes += int(self.seconds // 60)
             self.seconds = self.seconds % 60
         if self.minutes >= 60 or self.minutes < 0:
@@ -57,10 +58,13 @@ class RailClockApp(app.App):
         self.button_states = Buttons(self)
         self.ff_rate = 1
         try:
+            import ntptime
+            ntptime.settime()
             now = time.localtime()
             self.update_time(now)
-            self.seconds = now.tm_sec
-        except:
+            self.seconds = now[5]
+        except Exception as e:
+            print(e)
             print("Couldn't get starting time. Starting at midnight")
             self.hours = 0
             self.minutes = 0
@@ -96,7 +100,7 @@ class RailClockApp(app.App):
             self.seconds += delta / 1000
             # Plus sync every minute to avoid drift:
             # (but do it at the 45 second mark, so the magic moment the arrows meet is smooth!)
-            if now.tm_sec == 45:
+            if now[5] == 45:
                 if not self.updated_seconds:
                     self.seconds = 45
                 self.updated_seconds = True
